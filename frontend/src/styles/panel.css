@@ -1,0 +1,162 @@
+/* Painel de chamadas (TV). Texto grande e contraste alto, legível à distância (RNF-09). */
+.panel {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  background: #06182b;
+  color: #fff;
+}
+.panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 3vw, 2.5rem);
+  background: var(--ink);
+}
+.panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+}
+.panel-clock {
+  display: grid;
+  text-align: right;
+  line-height: 1.1;
+}
+.panel-clock strong {
+  font-family: var(--mono);
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+}
+.panel-clock span {
+  color: #c9d6e6;
+}
+.panel-clock span::first-letter {
+  text-transform: uppercase;
+}
+
+.panel-current {
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+.panel-current-card {
+  width: min(1100px, 100%);
+  display: grid;
+  justify-items: center;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: 32px;
+  border: 6px solid #fff;
+  text-align: center;
+}
+.panel-current-card.t-SP {
+  background: var(--sp);
+}
+.panel-current-card.t-SE {
+  background: var(--se);
+}
+.panel-current-card.t-SG {
+  background: var(--sg);
+}
+.panel-empty {
+  border-style: dashed;
+  border-color: #56657a;
+  color: #c9d6e6;
+}
+.panel-current-card p {
+  margin: 0;
+}
+.panel-label {
+  font-size: clamp(1.2rem, 2.4vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.panel-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(5rem, 16vw, 13rem);
+  line-height: 1;
+}
+.panel-type {
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 700;
+}
+.panel-counter {
+  display: grid;
+  margin-top: 1rem;
+  padding: 0.6rem 2rem;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 20px;
+}
+.panel-counter strong {
+  font-size: clamp(2.4rem, 7vw, 5.5rem);
+  line-height: 1.05;
+}
+.panel-last-call {
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 700;
+  background: var(--highlight);
+  color: var(--highlight-ink);
+  padding: 0.2rem 1.4rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem !important;
+  text-transform: uppercase;
+}
+.flash {
+  animation: panel-flash 0.9s ease-out 3;
+}
+@keyframes panel-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 209 102 / 0.95);
+  }
+  100% {
+    box-shadow: 0 0 0 36px rgb(255 209 102 / 0);
+  }
+}
+
+.panel-history {
+  padding: 0 clamp(1rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+}
+.panel-history h2 {
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  color: #c9d6e6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.panel-history ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+}
+.panel-history li {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem 1.2rem;
+  background: #0f2a47;
+  border: 2px solid #33506f;
+  border-radius: 18px;
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+}
+.panel-history li .type-badge {
+  justify-self: start;
+}
+.panel-history-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  line-height: 1.1;
+}
+.panel-history-counter {
+  font-weight: 700;
+  color: var(--highlight);
+}
+.panel-history-empty {
+  color: #8a96a6;
+}
