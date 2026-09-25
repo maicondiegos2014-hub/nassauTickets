@@ -1,0 +1,90 @@
+.terminal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+  gap: 1.25rem;
+}
+@media (max-width: 760px) {
+  .terminal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.terminal-current {
+  display: flex;
+  flex-direction: column;
+}
+.terminal-ticket {
+  display: grid;
+  justify-items: start;
+  gap: 0.3rem;
+}
+.terminal-number {
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+}
+.terminal-status {
+  display: inline-block;
+  font-weight: 700;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  background: #e8ecf1;
+  margin: 0;
+}
+.terminal-status.s-CHAMADA,
+.terminal-status.s-CHAMADA_NOVAMENTE {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.terminal-status.s-EM_ATENDIMENTO {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.terminal-times {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.75rem;
+}
+.terminal-times dt {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.terminal-times dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 1.15rem;
+}
+.terminal-free {
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  margin: auto 0;
+  padding: 2rem 0;
+}
+.terminal-actions {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+.terminal-btn {
+  min-height: 60px;
+  font-size: 1.1rem;
+  width: 100%;
+}
+.terminal-finish:not(:disabled) {
+  --btn-bg: var(--ok);
+  --btn-fg: #fff;
+  --btn-border: var(--ok);
+}
+.terminal-queue {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 520px) {
+  .terminal-queue,
+  .terminal-times {
+    grid-template-columns: 1fr;
+  }
+}
