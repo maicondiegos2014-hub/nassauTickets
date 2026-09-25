@@ -1,0 +1,424 @@
+openapi: 3.1.0
+info:
+  title: nassauTickets API
+  version: 1.0.0
+  description: |
+    API do Sistema de Controle de Atendimento do Laboratório de Análises Clínicas.
+
+    - Autenticação por cookie de sessão `nt_session` (httpOnly, SameSite=Strict), criado em `POST /auth/login`.
+    - Todos os horários são gerados pelo servidor e retornados em ISO 8601 (UTC). O fuso do laboratório está em `GET /config`.
+    - Erros seguem o formato `{ "error": { "code": "...", "message": "..." } }`.
+    - Requisições `POST` de emissão e chamada aceitam o cabeçalho `Idempotency-Key` (8 a 64 caracteres `[A-Za-z0-9_-]`):
+      repetir a mesma chave devolve o mesmo resultado, sem criar senha nova.
+  license:
+    name: MIT
+servers:
+  - url: /api
+
+tags:
+  - name: Público
+  - name: Totem
+    description: Sem login. Somente emissão (RNF-03).
+  - name: Painel
+    description: Sem login. Somente leitura das últimas chamadas (RNF-03).
+  - name: Autenticação
+  - name: Atendimento
+    description: Perfis ATENDENTE e GESTOR, com guichê vinculado à sessão.
+  - name: Gestão
+    description: Somente GESTOR (RF-03, RNF-01).
+  - name: Relatórios
+    description: Somente GESTOR (RF-31, RNF-01).
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: nt_session
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[A-Za-z0-9_-]{8,64}$' }
+    TicketId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, examples: [TRANSICAO_INVALIDA, FORA_DO_EXPEDIENTE, ACESSO_NEGADO] }
+            message: { type: string }
+    TicketType:
+      type: string
+      enum: [SP, SG, SE]
+    TicketStatus:
+      type: string
+      enum: [EMITIDA, AGUARDANDO, CHAMADA, CHAMADA_NOVAMENTE, EM_ATENDIMENTO, ATENDIDA, NAO_COMPARECEU, DESCARTADA]
+    TotemTicket:
+      type: object
+      properties:
+        number: { type: string, examples: ['260923-SP001'] }
+        type: { $ref: '#/components/schemas/TicketType' }
+        typeLabel: { type: string }
+        issuedAt: { type: string, format: date-time }
+    AttendantTicket:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: string }
+        type: { $ref: '#/components/schemas/TicketType' }
+        typeLabel: { type: string }
+        status: { $ref: '#/components/schemas/TicketStatus' }
+        issuedAt: { type: string, format: date-time }
+        firstCallAt: { type: [string, 'null'], format: date-time }
+        secondCallAt: { type: [string, 'null'], format: date-time }
+        startedAt: { type: [string, 'null'], format: date-time }
+        finishedAt: { type: [string, 'null'], format: date-time }
+        counterId: { type: integer }
+    PanelCall:
+      type: object
+      properties:
+        number: { type: string }
+        type: { $ref: '#/components/schemas/TicketType' }
+        typeLabel: { type: string }
+        seq: { type: integer }
+        counterNumber: { type: integer }
+        counterName: { type: string }
+        lastCall: { type: boolean, description: true quando foi a segunda chamada ("Última chamada") }
+        at: { type: string, format: date-time }
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        fullName: { type: string }
+        role: { type: string, enum: [GESTOR, ATENDENTE] }
+        status: { type: string, enum: [ATIVO, BLOQUEADO, INATIVO] }
+        mustChangePassword: { type: boolean }
+    Counter:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        name: { type: string }
+        active: { type: boolean }
+  responses:
+    Error:
+      description: Erro
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+paths:
+  /health:
+    get:
+      tags: [Público]
+      summary: Saúde do serviço e do banco
+      responses:
+        '200': { description: OK }
+        '503': { description: Banco indisponível }
+  /config:
+    get:
+      tags: [Público]
+      summary: Fuso, expediente e se chamadas/emissão estão abertas
+      responses:
+        '200': { description: OK }
+  /counters:
+    get:
+      tags: [Público]
+      summary: Guichês ativos (para escolha no login)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Counter' } }
+
+  /totem/tickets:
+    post:
+      tags: [Totem]
+      summary: Emite uma senha anônima (RF-07 a RF-10)
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { $ref: '#/components/schemas/TicketType' }
+      responses:
+        '201':
+          description: Senha emitida e colocada na fila (AGUARDANDO)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TotemTicket' }
+        '200': { description: Repetição com a mesma Idempotency-Key — devolve a mesma senha }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { description: Fora do expediente de emissão ou limite diário atingido }
+
+  /panel/calls:
+    get:
+      tags: [Painel]
+      summary: As 5 últimas senhas chamadas, a mais recente primeiro (RF-21, RF-22)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/PanelCall' } }
+  /panel/stream:
+    get:
+      tags: [Painel]
+      summary: Server-Sent Events — evento `call` a cada chamada (RF-23)
+      description: 'data: { "kind": "CHAMADA" | "CHAMADA_NOVAMENTE", "number": "...", "calls": PanelCall[] }'
+      responses:
+        '200':
+          description: text/event-stream
+
+  /auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Login vinculado ao guichê (RF-01); bloqueio após 5 falhas (RNF-02)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                counterId: { type: [integer, 'null'], description: Obrigatório para ATENDENTE }
+      responses:
+        '200': { description: Sessão criada (cookie nt_session) }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { description: Usuário ou senha inválidos }
+        '403': { description: Usuário bloqueado ou desativado }
+        '409': { description: Guichê em uso por outro atendente }
+        '429': { description: Bloqueio temporário por tentativas falhas }
+  /auth/logout:
+    post:
+      tags: [Autenticação]
+      security: [{ session: [] }]
+      responses:
+        '204': { description: Sessão encerrada }
+  /auth/me:
+    get:
+      tags: [Autenticação]
+      security: [{ session: [] }]
+      responses:
+        '200': { description: Usuário e guichê da sessão }
+        '401': { $ref: '#/components/responses/Error' }
+  /auth/password:
+    post:
+      tags: [Autenticação]
+      summary: Troca da própria senha (RF-02)
+      security: [{ session: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 8, maxLength: 72 }
+      responses:
+        '204': { description: Senha alterada }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /attendance/current:
+    get:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Senha atual do guichê e quantidade aguardando por tipo
+      responses:
+        '200': { description: OK }
+  /attendance/call-next:
+    post:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Chama a próxima senha pela regra de prioridade (RF-12 a RF-14, RF-19)
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200':
+          description: '`ticket` chamado, ou `ticket: null` se não houver senhas aguardando'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket: { oneOf: [{ $ref: '#/components/schemas/AttendantTicket' }, { type: 'null' }] }
+        '409': { description: Fora do expediente, guichê desativado ou atendimento em andamento }
+  /attendance/tickets/{id}/recall:
+    post:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Chamar novamente — CHAMADA → CHAMADA_NOVAMENTE (RF-15)
+      parameters: [{ $ref: '#/components/parameters/TicketId' }]
+      responses:
+        '200': { description: OK }
+        '403': { description: Senha de outro atendente }
+        '409': { description: Transição inválida }
+  /attendance/tickets/{id}/start:
+    post:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Iniciar atendimento — → EM_ATENDIMENTO (RF-16)
+      parameters: [{ $ref: '#/components/parameters/TicketId' }]
+      responses:
+        '200': { description: OK }
+        '409': { description: Transição inválida }
+  /attendance/tickets/{id}/finish:
+    post:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Encerrar atendimento — EM_ATENDIMENTO → ATENDIDA (RF-17)
+      parameters: [{ $ref: '#/components/parameters/TicketId' }]
+      responses:
+        '200': { description: OK }
+        '409': { description: Transição inválida }
+  /attendance/tickets/{id}/no-show:
+    post:
+      tags: [Atendimento]
+      security: [{ session: [] }]
+      summary: Não compareceu após a 2ª chamada — CHAMADA_NOVAMENTE → NAO_COMPARECEU (RF-18)
+      parameters: [{ $ref: '#/components/parameters/TicketId' }]
+      responses:
+        '200': { description: OK }
+        '409': { description: Transição inválida }
+
+  /admin/users:
+    get:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/User' } }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Cria login de atendente com senha provisória (RF-04)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, fullName, password]
+              properties:
+                username: { type: string, pattern: '^[a-z0-9._-]{3,40}$' }
+                fullName: { type: string }
+                password: { type: string }
+      responses:
+        '201': { description: Criado }
+        '409': { description: Login já existe }
+  /admin/users/{id}:
+    patch:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Altera nome ou situação — ATIVO, BLOQUEADO, INATIVO (RF-05)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: OK }
+  /admin/users/{id}/password:
+    post:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Define senha provisória
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '204': { description: OK }
+  /admin/counters:
+    get:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Cadastra guichê (RF-06)
+      responses:
+        '201': { description: Criado }
+  /admin/counters/{id}:
+    patch:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Edita ou desativa guichê — `{ number?, name?, active? }` (RF-06)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: OK }
+  /admin/contingency:
+    post:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Registra senha manual emitida durante falha do totem (RNF-14)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type: { $ref: '#/components/schemas/TicketType' }
+                manualRef: { type: string, maxLength: 40 }
+      responses:
+        '201': { description: Senha oficial gerada e colocada na fila }
+  /admin/simulation:
+    post:
+      tags: [Gestão]
+      security: [{ session: [] }]
+      summary: Simula um dia de atendimento (RF-34); não grava dados
+      responses:
+        '200': { description: Resultado da simulação }
+
+  /reports/{name}:
+    get:
+      tags: [Relatórios]
+      security: [{ session: [] }]
+      summary: Emite um relatório (auditado — RNF-08)
+      description: |
+        `name`: `summary` (RF-27), `detailed` (RF-28), `average-time` (RF-29), `audit` (RF-30),
+        `system-log` (RNF-08), `dashboard` (RF-33).
+        Período: `period=day&date=AAAA-MM-DD`, `period=month&month=AAAA-MM` ou `from=AAAA-MM-DD&to=AAAA-MM-DD`.
+        Filtros (audit, system-log): `userId`, `counterId`.
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string, enum: [summary, detailed, average-time, audit, system-log, dashboard] } }
+        - { name: period, in: query, schema: { type: string, enum: [day, month] } }
+        - { name: date, in: query, schema: { type: string, format: date } }
+        - { name: month, in: query, schema: { type: string, pattern: '^\d{4}-\d{2}$' } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: userId, in: query, schema: { type: integer } }
+        - { name: counterId, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { description: Atendente não acessa relatórios (RF-31) }
+  /reports/{name}/exports:
+    post:
+      tags: [Relatórios]
+      security: [{ session: [] }]
+      summary: Registra a exportação em PDF ou CSV (RF-32)
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format: { type: string, enum: [pdf, csv] }
+      responses:
+        '204': { description: OK }
