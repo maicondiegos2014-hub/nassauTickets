@@ -1,0 +1,184 @@
+/* Totem — RNF-09 (LBI): botões grandes, contraste alto, conteúdo concentrado na
+   faixa central/inferior da tela para ser alcançável por pessoas em cadeira de rodas. */
+.totem {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  background: var(--ink);
+  color: #fff;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+}
+.totem-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.totem-header .brand-mark {
+  width: 56px;
+  height: 56px;
+  font-size: 1.2rem;
+  border-radius: 14px;
+}
+.totem-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+.totem-lab {
+  margin: 0;
+  color: #c9d6e6;
+}
+
+.totem-choose,
+.totem-message,
+.totem-ticket {
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-top: 2rem;
+  width: min(1100px, 100%);
+  align-self: center;
+}
+.totem-choose h2 {
+  text-align: center;
+  font-size: clamp(1.4rem, 3vw, 2.1rem);
+  margin-bottom: 1.5rem;
+}
+.totem-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+.totem-option {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.6rem;
+  min-height: clamp(220px, 34vh, 340px);
+  padding: 1.5rem;
+  border: 4px solid #fff;
+  border-radius: 24px;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.totem-option:active {
+  transform: scale(0.98);
+}
+.totem-option:focus-visible {
+  outline: 6px solid var(--highlight);
+  outline-offset: 4px;
+}
+.totem-option.t-SP {
+  background: var(--sp);
+}
+.totem-option.t-SE {
+  background: var(--se);
+}
+.totem-option.t-SG {
+  background: var(--sg);
+}
+.totem-icon {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1;
+}
+.totem-option-title {
+  font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+  font-weight: 700;
+}
+.totem-option-text {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  max-width: 26ch;
+}
+.totem-note {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #c9d6e6;
+}
+
+.totem-message {
+  text-align: center;
+}
+.totem-message h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+.totem-error {
+  background: #fff;
+  color: var(--danger);
+  border-radius: 24px;
+  padding: 2rem;
+}
+
+.totem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.totem-big-btn {
+  min-height: 72px;
+  min-width: 240px;
+  font-size: 1.3rem;
+  border-radius: 16px;
+}
+
+.receipt {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: 2rem;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 24px;
+  text-align: center;
+  border: 4px dashed var(--line-strong);
+}
+.receipt-lab {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+.receipt-type {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+}
+.receipt-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 7vw, 3.8rem);
+  letter-spacing: 0.02em;
+  margin: 0.2em 0;
+}
+.receipt-seq {
+  display: inline-block;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.4rem;
+  background: var(--highlight);
+  color: var(--highlight-ink);
+  padding: 0.1rem 0.9rem;
+  border-radius: 999px;
+}
+.receipt-time,
+.receipt-help {
+  font-size: 1.05rem;
+}
+
+@media print {
+  .totem {
+    background: #fff;
+    color: #000;
+    padding: 0;
+    min-height: 0;
+  }
+  .totem-ticket {
+    padding: 0;
+  }
+  .receipt {
+    border: none;
+    width: 72mm;
+    padding: 0;
+  }
+  .receipt-number {
+    font-size: 26pt;
+  }
+}
