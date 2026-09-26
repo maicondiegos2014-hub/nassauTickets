@@ -30,6 +30,7 @@ export const config = {
   db: {
     host: process.env.DB_HOST ?? '127.0.0.1',
     port: int('DB_PORT', 3306),
+    // Credenciais só pelo .env (nunca versionado). Não há valor padrão no código.
     user: process.env.DB_USER ?? '',
     password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME ?? 'nassau_tickets',
@@ -64,7 +65,7 @@ export const config = {
     ratePerMinute: int('TOTEM_RATE_LIMIT', 60),
   },
 
-  // Primeiro acesso: o único gestor é criado a partir destas variáveis.
+  // Primeiro acesso: o único gestor é criado a partir destas variáveis, definidas só no .env.
   seed: {
     gestorUsername: process.env.GESTOR_USERNAME ?? '',
     gestorPassword: process.env.GESTOR_PASSWORD ?? '',

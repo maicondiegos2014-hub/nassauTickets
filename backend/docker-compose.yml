@@ -1,4 +1,5 @@
 # MySQL 8.0 para desenvolvimento: docker compose up -d
+# As credenciais vêm do .env desta pasta (nunca versionado); veja .env.example.
 services:
   mysql:
     image: mysql:8.0
