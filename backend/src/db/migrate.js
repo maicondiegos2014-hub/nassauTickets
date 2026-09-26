@@ -13,7 +13,7 @@ const schemaPath = fileURLToPath(new URL('./schema.sql', import.meta.url));
 /** Cria o banco (se preciso), aplica o esquema e cadastra o gestor e os guichês iniciais. */
 export async function migrate({ createDatabase = true } = {}) {
   const { host, port, user, password, database } = config.db;
-  if (!user) throw new Error('Defina DB_USER e DB_PASSWORD no arquivo .env do backend (veja .env.example).');
+  if (!user) throw new Error('Defina DB_USER e DB_PASSWORD no arquivo .env do backend.');
   const conn = await mysql.createConnection({ host, port, user, password, multipleStatements: true });
   try {
     if (createDatabase) {
