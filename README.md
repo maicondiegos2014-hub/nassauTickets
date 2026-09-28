@@ -61,8 +61,17 @@ L- README.md
 
 ### Configuração do Banco de Dados
 * Certifique-se de que o serviço do MySQL está rodando.
-* Crie um banco de dados chamado `nassautickets`.
-* Configure as credenciais no arquivo `.env` na pasta do backend (utilize o `.env.example` como base).
+* Crie um banco de dados chamado `nassau_tickets`.
+* Na pasta `backend`, crie manualmente um arquivo chamado `.env`.
+* Configure no arquivo `.env` as credenciais de acesso ao banco de dados, conforme o exemplo abaixo:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+DB_NAME=nassau_tickets
+```
 
 ### Executando o Backend
 ```bash
@@ -82,6 +91,15 @@ npm install
 npm run dev
 ```
 O frontend estará acessível em `http://localhost:5173` (ou na porta configurada pelo Vite).
+
+## Como Usar o Sistema
+
+Após iniciar o backend e o frontend, acesse a aplicação pelo navegador.
+
+* **Totem:** utilizado pelo cliente para emitir senhas dos tipos SP (Prioritária), SG (Geral) e SE (Retirada de Exames).
+* **Painel:** exibe as últimas senhas chamadas e o guichê responsável pelo atendimento.
+* **Atendimento:** utilizado pelos atendentes autenticados para chamar, rechamar, iniciar e finalizar atendimentos.
+* **Gestor:** possui acesso às funcionalidades administrativas, como gerenciamento de atendentes, guichês, relatórios, contingência e simulação.
 
 ## Estrutura de Branches e Histórico
 Este repositório segue um fluxo de trabalho baseado em duas branches principais:
