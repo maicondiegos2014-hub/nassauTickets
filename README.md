@@ -44,14 +44,14 @@ L- README.md
 ```
 
 ## Membros
-| Nome | Matrícula | Papel |
-| :--- | :--- | :--- |
-| Diego Teixeira | 01938580 | Scrum Master |
-| Cauã Henrique | 01938976 | Testador |
-| Jonatan Teixeira | 01929831 | Desenvolvedor |
-| Mário Sousa | 01353664 | Documentador |
-| Lucas Oliveira | 01933652 | Documentador |
-| Kaike | [000000] | Testador |
+| Nome             | Matrícula | Papel         |
+|------------------|-----------|---------------|
+| Diego Teixeira   | 01938580  | Scrum Master  |
+| Cauã Henrique    | 01938976  | Testador      |
+| Jonatan Teixeira | 01929831  | Desenvolvedor |
+| Mário Sousa      | 01353664  | Documentador  |
+| Lucas Oliveira   | 01933652  | Documentador  |
+| Kaike Filipe     | 01925793  | Testador      |
 
 ## Como Configurar e Executar o Projeto
 
