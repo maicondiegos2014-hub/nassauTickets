@@ -1,0 +1,30 @@
+# MySQL 8.0 para desenvolvimento: docker compose up -d
+# As credenciais vêm do .env desta pasta (nunca versionado).
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nassautickets-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?defina DB_ROOT_PASSWORD no .env}
+      MYSQL_DATABASE: ${DB_NAME:-nassau_tickets}
+      MYSQL_USER: ${DB_USER:?defina DB_USER no .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      TZ: America/Recife
+    command:
+      # RNF-12: logs binários para restauração até o ponto da falha (perda máxima de 15 min).
+      - --log-bin=mysql-bin
+      - --binlog-expire-logs-seconds=604800
+      - --sync-binlog=1
+      - --innodb-flush-log-at-trx-commit=1
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -uroot -p"$$MYSQL_ROOT_PASSWORD"']
+      interval: 10s
+      retries: 10
+
+volumes:
+  mysql-data:

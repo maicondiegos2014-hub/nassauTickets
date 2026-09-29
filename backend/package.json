@@ -1,0 +1,33 @@
+{
+  "name": "nassautickets-backend",
+  "version": "1.0.0",
+  "description": "API do nassauTickets — Sistema de Controle de Atendimento (Node 22 + Express + MySQL 8)",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:migrate": "node src/db/migrate.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/unit/*.test.js\"",
+    "monitor": "node scripts/monitor.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.24.4",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "mysql-memory-server": "^1.16.0",
+    "supertest": "^7.1.0"
+  }
+}
